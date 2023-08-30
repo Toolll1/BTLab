@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <title>Users</title>
+    <style>
+      .form-field {
+        padding: 5px 2px;
+      }
+
+    </style>
+    <script>
+      function getPersonInfo() {
+        var userId = document.getElementById("userId").value;
+        var ajaxRequest = new XMLHttpRequest();
+        ajaxRequest.onreadystatechange = function () {
+          if (ajaxRequest.readyState == 4 && ajaxRequest.status == 200) {
+            var response = JSON.parse(ajaxRequest.responseText);
+            document.getElementById("result").innerText =
+              response && JSON.stringify(response, null, 4);
+          } else if (ajaxRequest.readyState == 4) {
+            document.getElementById("result").innerText = "нет такого";
+          }
+        };
+
+        ajaxRequest.open("GET", "http://localhost:8080/users/admin/" + userId);
+        ajaxRequest.send();
+      }
+
+      function getTruancyByUserId() {
+        var userId = document.getElementById("userId1").value;
+        var ajaxRequest = new XMLHttpRequest();
+        ajaxRequest.onreadystatechange = function () {
+          if (ajaxRequest.readyState == 4 && ajaxRequest.status == 200) {
+            var response = JSON.parse(ajaxRequest.responseText);
+            document.getElementById("result1").innerText =
+              response && JSON.stringify(response, null, 4);
+          } else if (ajaxRequest.readyState == 4) {
+            document.getElementById("result1").innerText = "нет такого";
+          }
+        };
+
+        ajaxRequest.open(
+          "GET",
+          "http://localhost:8080/truancy/admin/user/" + userId
+        );
+        ajaxRequest.send();
+      }
+
+      function deleteTruancy() {
+        var truancyId = document.getElementById("truancyId").value;
+        var ajaxRequest = new XMLHttpRequest();
+        ajaxRequest.onreadystatechange = function () {
+          if (ajaxRequest.status == 204) {
+            document.getElementById("result2").innerText = "успех";
+          } else if (ajaxRequest.status == 404) {
+            document.getElementById("result2").innerText = "нет такого";
+          }
+        };
+
+        ajaxRequest.open(
+          "DELETE",
+          "http://localhost:8080/truancy/admin/" + truancyId
+        );
+        ajaxRequest.send();
+      }
+
+      function createTruancy(form) {
+        var formData = new FormData(form);
+        var values = Object.fromEntries(formData);
+
+        var ajaxRequest = new XMLHttpRequest();
+        ajaxRequest.onreadystatechange = function () {
+          if (ajaxRequest.status == 201) {
+            document.getElementById("result3").innerText = "успех"
+          } else {
+            document.getElementById("result3").innerText = "ошибка";
+          }
+        };
+
+        ajaxRequest.open(
+          "POST",
+          "http://localhost:8080/truancy/admin"
+          );
+        ajaxRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        ajaxRequest.send(
+          JSON.stringify({
+            ...values,
+            discounted: Boolean(values.discounted),
+            duration: Number(values.duration)
+          })
+        );
+      }
+
+        function updateTruancy(form) {
+        var formData = new FormData(form);
+        var values = Object.fromEntries(formData);
+
+        var ajaxRequest = new XMLHttpRequest();
+        ajaxRequest.onreadystatechange = function () {
+          if (ajaxRequest.status == 200) {
+            document.getElementById("result4").innerText = "успех"
+          } else {
+            document.getElementById("result4").innerText = "ошибка";
+          }
+        };
+
+        ajaxRequest.open(
+          "PATCH",
+          "http://localhost:8080/truancy/admin/" + values.truancy
+          );
+        ajaxRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        ajaxRequest.send(
+          JSON.stringify({
+            ...values,
+            discounted: Boolean(values.discounted),
+            duration: Number(values.duration)
+          })
+        );
+      }
+
+    </script>
+</head>
+<body>
+<h1>Учет отсутствия сотрудников на рабочем месте</h1>
+<p>(Тут ты можешь найти нужного сотрудника по его id)</p>
+<p>
+    <label for="userId"></label>
+    <input type="text" value="1" id="userId"/>
+    <button
+            type="button"
+            onclick="getPersonInfo()"
+    >
+        Поиск
+    </button>
+</p>
+<div id="result" style="white-space: pre-wrap; padding: 1em"></div>
+
+<p>(Тут ты можешь найти информацию об отсутствии сотрудника по его id)</p>
+<p>
+    <label for="userId1">userId1</label>
+    <input type="text" value="1" id="userId1"/>
+    <button
+            type="button"
+            onclick="getTruancyByUserId()"
+    >
+        Поиск
+    </button>
+</p>
+<div id="result1" style="white-space: pre-wrap; padding: 1em"></div>
+
+<p>
+    (Тут ты можешь удалить информацию об отсутствии сотрудника по id записи об
+    отсутствии)
+</p>
+<p>
+    <label for="truancyId"></label>
+    <input type="text" value="1" id="truancyId"/>
+    <button
+            type="button"
+            onclick="deleteTruancy()"
+    >
+        Удалить
+    </button>
+</p>
+<div id="result2" style="white-space: pre-wrap; padding: 1em"></div>
+
+<h3>Добавить информацию об отсутствии сотрудника</h3>
+<form name="postForm" onsubmit="createTruancy(this); return false;">
+    <div class="form-field">
+        <label for="reason">Причина отсутствия (1 - отпуск; 2 - больничный; 3 - прогул)</label>
+        <input type="text" name="reason" id="reason"/>
+    </div>
+    <div class="form-field">
+        <label for="start">Дата начала</label>
+        <input type="date" name="startDate" id="start"/>
+    </div>
+    <div class="form-field">
+        <label for="duration">Продолжительность</label>
+        <input type="number" name="duration" id="duration"/>
+    </div>
+    <div class="form-field">
+        <label for="discounted">Учтено при оплате</label>
+        <input type="checkbox" name="discounted" id="discounted" value="1"/>
+    </div>
+    <div class="form-field">
+        <label for="description">Комментарий</label>
+        <input type="text" name="description" id="description"/>
+    </div>
+    <div class="form-field">
+        <label for="user">id сотрудника</label>
+        <input type="number" name="user" id="user"/>
+    </div>
+    <button
+            type="submit"
+    >
+        Отправить
+    </button>
+</form>
+<div id="result3" style="white-space: pre-wrap; padding: 1em"></div>
+
+
+<h3>Откорректировать информацию об отсутствии сотрудника</h3>
+<form name="patchForm" onsubmit="updateTruancy(this); return false;">
+    <div class="form-field">
+        <label for="truancy">id записи об отсутствии</label>
+        <input type="text" name="truancy" id="truancy"/>
+    </div>
+    <div class="form-field">
+        <label for="reason1">Причина отсутствия (1 - отпуск; 2 - больничный; 3 - прогул)</label>
+        <input type="text" name="reason" id="reason1"/>
+    </div>
+    <div class="form-field">
+        <label for="start1">Дата начала</label>
+        <input type="date" name="startDate" id="start1"/>
+    </div>
+    <div class="form-field">
+        <label for="duration1">Продолжительность</label>
+        <input type="number" name="duration" id="duration1"/>
+    </div>
+    <div class="form-field">
+        <label for="discounted1">Учтено при оплате</label>
+        <input type="checkbox" name="discounted" id="discounted1" value="1"/>
+    </div>
+    <div class="form-field">
+        <label for="description1">Комментарий</label>
+        <input type="text" name="description" id="description1"/>
+    </div>
+    <div class="form-field">
+        <label for="user1">id сотрудника</label>
+        <input type="number" name="user" id="user1"/>
+    </div>
+    <button
+            type="submit"
+    >
+        Отправить
+    </button>
+</form>
+<div id="result4" style="white-space: pre-wrap; padding: 1em"></div>
+
+</body>
+</html>
